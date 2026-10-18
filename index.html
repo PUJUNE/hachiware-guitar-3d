@@ -17,13 +17,13 @@
   .ttl span { font-size:14px; font-weight:500; color:var(--sub); margin-left:10px; }
   main { flex:1; display:flex; min-height:0; }
   #view { position:relative; flex:1; min-width:0; overflow:hidden; background:radial-gradient(ellipse at 50% 38%, #ffffff 0%, #e8eef5 100%); }
-  #c { position:absolute; inset:0; width:100%; height:100%; display:block; }
+  #c { position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none; }
   #ov, #lb { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
   #tools { position:absolute; left:16px; top:14px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; max-width:calc(100% - 32px);
     background:rgba(255,255,255,.93); padding:8px 10px; border:1px solid var(--line); border-radius:6px; }
-  #tools button { font:inherit; font-size:13px; padding:5px 12px; border:1.5px solid var(--ink); background:#fff; color:var(--ink); border-radius:4px; cursor:pointer; }
+  #tools button { font:inherit; font-size:13px; padding:5px 12px; border:1.5px solid var(--ink); background:#fff; color:var(--ink); border-radius:4px; cursor:pointer; white-space:nowrap; flex:0 0 auto; }
   #tools button.on { background:var(--ink); color:#fff; }
-  #tools label { font-size:13px; margin-left:8px; display:flex; align-items:center; gap:6px; white-space:nowrap; }
+  #tools label { font-size:13px; margin-left:8px; display:flex; align-items:center; gap:6px; white-space:nowrap; flex:0 0 auto; }
   #tools input[type=range] { width:112px; }
   .hint, .note { pointer-events:none; }
   .hint { position:absolute; left:16px; bottom:12px; font-size:12px; color:var(--sub); }
@@ -44,6 +44,25 @@
   .sw { display:inline-block; width:11px; height:11px; border:1px solid #94a3b8; border-radius:2px; vertical-align:-1px; margin-right:5px; }
   .beat { margin:12px 0 0; padding:9px 11px; background:#eef2f7; border-left:3px solid var(--accent); font-size:12.5px; line-height:1.6; }
   .foot { margin-top:14px; font-size:11.5px; color:var(--sub); line-height:1.6; }
+  @media (max-width: 860px) {
+    header { padding:10px 14px; gap:10px; }
+    .ttl { font-size:18px; }
+    .ttl span { display:block; margin:2px 0 0; font-size:12px; }
+    main { flex-direction:column; }
+    #view { flex:none; height:min(70vh, 620px); min-height:300px; }
+    aside { width:100%; flex:none; border-left:none; border-top:1px solid var(--line); padding:14px 16px; overflow-y:visible; }
+    #tools { left:8px; right:8px; top:8px; max-width:none; padding:6px 8px; gap:4px;
+      flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    #tools button { padding:4px 9px; font-size:12px; }
+    #tools label { font-size:12px; margin-left:5px; }
+    #tools input[type=range] { width:84px; }
+    .hint { display:none; }
+    .note { left:8px; right:8px; bottom:6px; font-size:11px; text-align:center; }
+    .lbl .t { font-size:12px; } .lbl .s { font-size:10px; }
+  }
+  @media (max-width: 860px) and (orientation: landscape) {
+    #view { height:min(82vh, 520px); }
+  }
 </style>
 </head>
 <body>
@@ -504,8 +523,8 @@ function init() {
   sp.rotation.x = -Math.PI / 2; sp.position.y = 0.02; sp.receiveShadow = true; scene.add(sp);
 
   content = new THREE.Group(); scene.add(content);
-  rebuild(); setView('iso'); tools(); panel();
-  addEventListener('resize', resize); resize();
+  rebuild(); tools(); panel();
+  addEventListener('resize', resize); resize(); setView('iso');
   animate();
 }
 
@@ -552,27 +571,35 @@ function applySel() {
 }
 
 /* ===== 카메라 ===== */
+/* 화면이 세로로 길면 가로가 먼저 넘친다 — 세로·가로 가운데 더 먼 쪽으로 물러난다 */
+function camDist(half, halfW) {
+  const t = Math.tan(camera.fov * RAD / 2);
+  return Math.max(half / t, (halfW || half) / (t * Math.max(camera.aspect, 0.2)));
+}
 function setView(k) {
   const v = {
-    iso: { t: V3(0, 52, 0), half: 62, dir: V3(0.6, 0.3, 1).normalize() },
-    front: { t: V3(0, 52, 0), half: 60, dir: V3(0, 0.08, 1).normalize() },
-    side: { t: V3(0, 52, 0), half: 62, dir: V3(1, 0.1, 0.16).normalize() },
-    face: { t: V3(0, 68, 4), half: 32, dir: V3(0.1, 0.06, 1).normalize() },
-    top: { t: V3(0, 44, 2), half: 66, dir: V3(0, 1, 0.001).normalize() },
+    iso: { t: V3(0, 52, 0), half: 62, w: 48, dir: V3(0.6, 0.3, 1).normalize() },
+    front: { t: V3(0, 52, 0), half: 60, w: 46, dir: V3(0, 0.08, 1).normalize() },
+    side: { t: V3(0, 52, 0), half: 62, w: 44, dir: V3(1, 0.1, 0.16).normalize() },
+    face: { t: V3(0, 68, 4), half: 32, w: 26, dir: V3(0.1, 0.06, 1).normalize() },
+    top: { t: V3(0, 44, 2), half: 66, w: 50, dir: V3(0, 1, 0.001).normalize() },
   }[k] || {};
   const half = v.half || 62;
-  camera.position.copy(v.t.clone().add(v.dir.clone().multiplyScalar(half / Math.tan(camera.fov * RAD / 2))));
+  camera.position.copy(v.t.clone().add(v.dir.clone().multiplyScalar(camDist(half, v.w))));
   controls.target.copy(v.t); controls.update();
   S.view = k;
   document.querySelectorAll('#tools button[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === k));
   drawOverlay();
 }
 
+let lastAspect = 0;
 function resize() {
   const el = document.getElementById('view'), w = el.clientWidth, h = el.clientHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h; camera.updateProjectionMatrix();
   ovEl.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  if (lastAspect && Math.abs(camera.aspect - lastAspect) / lastAspect > 0.15) setView(S.view);
+  lastAspect = camera.aspect;
   drawOverlay();
 }
 
