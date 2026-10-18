@@ -265,8 +265,8 @@ function buildFeet() {
     const f = new THREE.Group();
     f.add(ellip(4.6, 3.6, 6.6, M.skin));
     const toe = ellip(3.6, 2.9, 3.0, M.skin); toe.position.set(0, 0.3, 4.1); f.add(toe);
-    f.position.set(s * 4.4, 12.5, 28.0);
-    f.rotation.y = s * 10 * RAD; f.rotation.x = -8 * RAD;
+    f.position.set(s * 6.0, 24.4, 20.5);          // 바닥이 그루터기 윗면(21)에 닿고 몸통 아래에서 앞으로 나온다
+    f.rotation.y = s * 10 * RAD; f.rotation.x = -5 * RAD;
     g.add(f);
   });
   return tag(g, 'feet');
@@ -481,7 +481,7 @@ const DEV = {
     { key: 'armStrum', name: '치는 팔', desc: '기타 윗전을 넘어 사운드홀 쪽으로', dim: 'Ø8', color: C.skin },
     { key: 'armFret', name: '잡는 팔', desc: '목 위쪽을 쥔다', dim: 'Ø8', color: C.skin },
     { key: 'guitar', name: '기타', desc: '사운드홀·브리지·줄 넷·헤드 슬롯', dim: '전체 72 · 몸통 47', color: C.top },
-    { key: 'feet', name: '발 둘', desc: '그루터기 앞으로 조금 나온다', dim: '12 × 9 × 19', color: C.skin },
+    { key: 'feet', name: '발 둘', desc: '몸통 아래에서 나와 그루터기 윗면을 딛는다', dim: '12 × 9 × 19', color: C.skin },
     { key: 'stump', name: '그루터기 받침', desc: '나이테 넷, 껍질 홈을 둘씩 셋씩', dim: 'Ø73 → Ø63 · 높이 21', color: C.stump },
   ],
 };
@@ -606,7 +606,7 @@ const ANCH = {
   ears: () => onHead(-EAR_U, EAR_T - 16 * RAD, 11), face: () => V3(FACE.eye.o[0], HEAD.y + FACE.eye.o[1], HEAD.rz * 0.9),
   mouth: () => V3(0, HEAD.y + FACE.mouth.o[1], HEAD.rz * 0.92), body: () => V3(-18, 34, 8),
   armStrum: () => V3(-17, 32, 20), armFret: () => V3(26, 39, 20),
-  guitar: () => V3(22, 42, 24), feet: () => V3(8, 15, 28), stump: () => V3(-24, 10, 22),
+  guitar: () => V3(22, 42, 24), feet: () => V3(8, 25, 20), stump: () => V3(-24, 10, 22),
 };
 const lblOff = {};
 function drawOverlay() {
