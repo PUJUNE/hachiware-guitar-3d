@@ -265,7 +265,7 @@ function buildFeet() {
     const f = new THREE.Group();
     f.add(ellip(4.6, 3.6, 6.6, M.skin));
     const toe = ellip(3.6, 2.9, 3.0, M.skin); toe.position.set(0, 0.3, 4.1); f.add(toe);
-    f.position.set(s * 6.0, 24.4, 20.5);          // 바닥이 그루터기 윗면(21)에 닿고 몸통 아래에서 앞으로 나온다
+    f.position.set(s * 5.2, 24.6, 14.2);          // 바닥이 그루터기 윗면(21)에 닿고 윗부분은 몸통 아랫면에 묻힌다
     f.rotation.y = s * 10 * RAD; f.rotation.x = -5 * RAD;
     g.add(f);
   });
